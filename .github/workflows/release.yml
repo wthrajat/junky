@@ -3,6 +3,7 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 jobs:
   build:
     runs-on: windows-latest
@@ -12,6 +13,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --release --bins
-      - run: gh release create "${{ github.ref_name }}" target/release/junky.exe target/release/junky-gui.exe --title "${{ github.ref_name }}" --notes "Junky for Windows. Run junky-gui.exe for the desktop app or junky.exe for the CLI. Portable, no installer. The build is unsigned, so SmartScreen asks once: choose More info, then Run anyway."
+        shell: bash
+      - run: |
+          VERSION=$(grep '^version =' Cargo.toml | head -n 1 | cut -d'"' -f2)
+          gh release create "v$VERSION" target/release/junky.exe target/release/junky-gui.exe --title "v$VERSION" --notes "Junky for Windows. Run junky-gui.exe for the desktop app or junky.exe for the CLI. Portable, no installer. The build is unsigned, so SmartScreen asks once: choose More info, then Run anyway."
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
