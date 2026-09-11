@@ -1,30 +1,37 @@
+use rayon::prelude::*;
+
 use crate::core::clean_summary::CleanSummary;
 use crate::core::junk_item::JunkItem;
 
 pub fn remove_items(items: &[JunkItem]) -> CleanSummary {
-    let mut summary = CleanSummary::default();
-
-    for item in items {
-        remove_single(item, &mut summary);
-    }
-
-    summary
-}
-
-fn remove_single(item: &JunkItem, summary: &mut CleanSummary) {
-    if !item.path.is_file() {
-        summary.add_skipped();
-        return;
-    }
-
-    match std::fs::remove_file(&item.path) {
-        Ok(()) => summary.add_removed(item.size_bytes),
-        Err(error) if error.kind() == std::io::ErrorKind::PermissionDenied => {
-            summary.add_skipped();
-        }
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-            summary.add_skipped();
-        }
-        Err(_) => summary.add_failed(),
+    let (removed_files, freed_bytes, skipped_files, failed_files) = items
+        .par_iter()
+        .map(|item| match std::fs::remove_file(&item.path) {
+            Ok(()) => (1_usize, item.size_bytes, 0_usize, 0_usize),
+            Err(error)
+                if error.kind() == std::io::ErrorKind::NotFound
+                    || error.kind() == std::io::ErrorKind::PermissionDenied
+                    || error.kind() == std::io::ErrorKind::IsADirectory =>
+            {
+                (0, 0, 1, 0)
+            }
+            Err(_) => (0, 0, 0, 1),
+        })
+        .reduce(
+            || (0_usize, 0_u64, 0_usize, 0_usize),
+            |left, right| {
+                (
+                    left.0 + right.0,
+                    left.1 + right.1,
+                    left.2 + right.2,
+                    left.3 + right.3,
+                )
+            },
+        );
+    CleanSummary {
+        removed_files,
+        freed_bytes,
+        skipped_files,
+        failed_files,
     }
 }

@@ -6,20 +6,28 @@ use super::blocklist::is_blocked_path;
 use crate::core::minimum_age::MinimumAge;
 
 pub fn should_keep_file(path: &Path, metadata: &Metadata, minimum_age: MinimumAge) -> bool {
+    should_keep_file_with_cutoff(path, metadata, minimum_age.cutoff())
+}
+
+pub fn should_keep_file_with_cutoff(
+    path: &Path,
+    metadata: &Metadata,
+    cutoff: Option<SystemTime>,
+) -> bool {
     if is_blocked_path(&path.to_string_lossy()) {
         return true;
     }
 
-    if !is_old_enough(metadata, minimum_age) {
+    if !is_old_enough_with_cutoff(metadata, cutoff) {
         return true;
     }
 
     false
 }
 
-fn is_old_enough(metadata: &Metadata, minimum_age: MinimumAge) -> bool {
-    let required = match minimum_age.as_duration() {
-        Some(required) => required,
+fn is_old_enough_with_cutoff(metadata: &Metadata, cutoff: Option<SystemTime>) -> bool {
+    let limit = match cutoff {
+        Some(limit) => limit,
         None => return true,
     };
 
@@ -28,8 +36,5 @@ fn is_old_enough(metadata: &Metadata, minimum_age: MinimumAge) -> bool {
         Err(_) => return false,
     };
 
-    SystemTime::now()
-        .duration_since(modified)
-        .map(|age| age >= required)
-        .unwrap_or(false)
+    modified <= limit
 }

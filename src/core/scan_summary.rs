@@ -1,3 +1,4 @@
+use rayon::prelude::*;
 use serde::Serialize;
 use std::collections::BTreeMap;
 
@@ -19,7 +20,7 @@ pub struct ScanSummary {
 
 impl ScanSummary {
     pub fn from_items(mut items: Vec<JunkItem>) -> Self {
-        items.sort_by(|left, right| {
+        items.par_sort_unstable_by(|left, right| {
             left.category
                 .cmp(&right.category)
                 .then(left.path.cmp(&right.path))
@@ -34,14 +35,12 @@ impl ScanSummary {
 
         for item in items {
             summary.bytes += item.size_bytes;
-            summary
+            let total = summary
                 .by_category
                 .entry(item.category.clone())
                 .or_default();
-            if let Some(total) = summary.by_category.get_mut(&item.category) {
-                total.files += 1;
-                total.bytes += item.size_bytes;
-            }
+            total.files += 1;
+            total.bytes += item.size_bytes;
             summary.items.push(item);
         }
 

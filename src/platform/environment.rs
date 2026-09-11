@@ -10,34 +10,54 @@ fn windows_value(name: &str) -> Option<String> {
 }
 
 pub fn expand_windows_path(raw: &str) -> PathBuf {
+    let system_drive = windows_value("SystemDrive");
+    let system_root = windows_value("SystemRoot");
+    let temp = windows_value("TEMP");
+    let tmp = windows_value("TMP");
+    let local_app_data = windows_value("LOCALAPPDATA");
+    let app_data = windows_value("APPDATA");
+    let user_profile = windows_value("USERPROFILE");
+    let program_data = windows_value("ProgramData");
+    let public = windows_value("PUBLIC");
+
     let mut expanded = raw.to_string();
 
-    let replacements = [
-        ("%SystemDrive%", windows_value("SystemDrive")),
-        ("%SystemRoot%", windows_value("SystemRoot")),
-        ("%WinDir%", windows_value("SystemRoot")),
-        ("%WINDIR%", windows_value("SystemRoot")),
-        ("%windir%", windows_value("SystemRoot")),
-        ("%TEMP%", windows_value("TEMP")),
-        ("%Temp%", windows_value("TEMP")),
-        ("%TMP%", windows_value("TMP")),
-        ("%Tmp%", windows_value("TMP")),
-        ("%LOCALAPPDATA%", windows_value("LOCALAPPDATA")),
-        ("%LocalAppData%", windows_value("LOCALAPPDATA")),
-        ("%APPDATA%", windows_value("APPDATA")),
-        ("%AppData%", windows_value("APPDATA")),
-        ("%USERPROFILE%", windows_value("USERPROFILE")),
-        ("%UserProfile%", windows_value("USERPROFILE")),
-        ("%ProgramData%", windows_value("ProgramData")),
-        ("%CommonAppData%", windows_value("ProgramData")),
-        ("%Public%", windows_value("PUBLIC")),
-        ("%PUBLIC%", windows_value("PUBLIC")),
-    ];
-
-    for (token, value) in replacements {
-        if let Some(real) = value {
-            expanded = expanded.replace(token, &real);
-        }
+    if let Some(real) = system_drive {
+        expanded = expanded.replace("%SystemDrive%", &real);
+    }
+    if let Some(real) = system_root {
+        expanded = expanded.replace("%SystemRoot%", &real);
+        expanded = expanded.replace("%WinDir%", &real);
+        expanded = expanded.replace("%WINDIR%", &real);
+        expanded = expanded.replace("%windir%", &real);
+    }
+    if let Some(real) = temp {
+        expanded = expanded.replace("%TEMP%", &real);
+        expanded = expanded.replace("%Temp%", &real);
+    }
+    if let Some(real) = tmp {
+        expanded = expanded.replace("%TMP%", &real);
+        expanded = expanded.replace("%Tmp%", &real);
+    }
+    if let Some(real) = local_app_data {
+        expanded = expanded.replace("%LOCALAPPDATA%", &real);
+        expanded = expanded.replace("%LocalAppData%", &real);
+    }
+    if let Some(real) = app_data {
+        expanded = expanded.replace("%APPDATA%", &real);
+        expanded = expanded.replace("%AppData%", &real);
+    }
+    if let Some(real) = user_profile {
+        expanded = expanded.replace("%USERPROFILE%", &real);
+        expanded = expanded.replace("%UserProfile%", &real);
+    }
+    if let Some(real) = program_data {
+        expanded = expanded.replace("%ProgramData%", &real);
+        expanded = expanded.replace("%CommonAppData%", &real);
+    }
+    if let Some(real) = public {
+        expanded = expanded.replace("%Public%", &real);
+        expanded = expanded.replace("%PUBLIC%", &real);
     }
 
     let with_separators = expanded.replace('\\', "/");

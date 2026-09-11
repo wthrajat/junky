@@ -253,13 +253,15 @@ fn present_scan(
     status: Option<String>,
     snapshot: &Arc<Mutex<Vec<JunkItem>>>,
 ) {
-    *snapshot.lock().unwrap() = summary.items.clone();
-
-    ui.set_results(ModelRc::new(Rc::new(VecModel::from(to_result_rows(
-        &summary,
-    )))));
-
+    let rows = to_result_rows(&summary);
     let sizes = adapters::category_sizes(&summary);
+    let (total, files) = adapters::totals_text(&summary);
+    let result_count = summary.files;
+    let empty = summary.is_empty();
+    *snapshot.lock().unwrap() = summary.items;
+
+    ui.set_results(ModelRc::new(Rc::new(VecModel::from(rows))));
+
     let (safe_data, aggressive_data) = adapters::initial_categories();
     ui.set_safe_categories(ModelRc::new(Rc::new(VecModel::from(category_rows(
         &safe_data, checked, &sizes,
@@ -270,20 +272,19 @@ fn present_scan(
         &sizes,
     )))));
 
-    let (total, files) = adapters::totals_text(&summary);
     ui.set_total_text(total.clone().into());
     ui.set_files_text(files.clone().into());
-    ui.set_result_count(summary.files as i32);
+    ui.set_result_count(result_count as i32);
     ui.set_has_scanned(true);
     ui.set_busy(false);
 
-    let default_status = if summary.is_empty() {
+    let default_status = if empty {
         "No junk found in the selected categories.".to_string()
     } else {
         format!("Found {files} files using {total}.")
     };
     ui.set_status_text(status.unwrap_or(default_status).into());
-    ui.set_selected_count(summary.files as i32);
+    ui.set_selected_count(result_count as i32);
     ui.set_selection_text(format!("{files} files · {total}").into());
 }
 
@@ -356,12 +357,14 @@ fn flip_checked(model: &Rc<VecModel<CategoryRow>>, index: i32) {
 }
 
 fn set_all_selected(model: &Rc<VecModel<ResultRow>>, selected: bool) {
-    for index in 0..model.row_count() {
-        if let Some(mut row) = model.row_data(index) {
+    let rows: Vec<ResultRow> = model
+        .iter()
+        .map(|mut row| {
             row.selected = selected;
-            model.set_row_data(index, row);
-        }
-    }
+            row
+        })
+        .collect();
+    model.set_vec(rows);
 }
 
 fn uncheck_all(model: &Rc<VecModel<CategoryRow>>) {

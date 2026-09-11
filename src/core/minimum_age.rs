@@ -1,4 +1,5 @@
 use std::time::Duration;
+use std::time::SystemTime;
 
 #[derive(Debug, Clone, Copy)]
 pub struct MinimumAge {
@@ -18,5 +19,13 @@ impl MinimumAge {
 
     pub fn as_duration(self) -> Option<Duration> {
         self.inner
+    }
+
+    pub fn cutoff(self) -> Option<SystemTime> {
+        self.inner.map(|required| {
+            SystemTime::now()
+                .checked_sub(required)
+                .unwrap_or(std::time::UNIX_EPOCH)
+        })
     }
 }
