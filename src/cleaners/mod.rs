@@ -1,0 +1,27 @@
+pub mod app_caches;
+pub mod browser;
+pub mod catalog;
+pub mod cleaner;
+pub mod crash_dumps;
+pub mod defender_history;
+pub mod delivery_optimization;
+pub mod error_reports;
+pub mod extension_sweep;
+pub mod font_cache;
+pub mod icon_cache;
+pub mod internet_cache;
+pub mod office_cache;
+pub mod prefetch;
+pub mod recycle_bin;
+pub mod shader_cache;
+pub mod system_temp;
+pub mod thumbnail_cache;
+pub mod update_cache;
+pub mod user_temp;
+pub mod windows_logs;
+pub mod windows_old;
+
+pub use catalog::all_cleaners;
+pub use catalog::describe_all;
+pub use cleaner::Cleaner;
+pub use cleaner::CleanerInfo;

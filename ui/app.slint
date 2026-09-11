@@ -1,0 +1,381 @@
+import { CheckBox, ComboBox, ListView, ProgressIndicator, ScrollView, Switch } from "std-widgets.slint";
+import { ActionButton, Badge, CategoryCheckRow, Palette, ResultRowView, SectionLabel, StatBlock } from "components.slint";
+
+export struct CategoryRow {
+    id: string,
+    label: string,
+    detail: string,
+    checked: bool,
+    size-text: string,
+}
+
+export struct ResultRow {
+    selected: bool,
+    category: string,
+    path: string,
+    size-text: string,
+    risk: string,
+}
+
+export component MainWindow inherits Window {
+    title: "Junky";
+    icon: @image-url("../assets/icon-64.png");
+    min-width: 980px;
+    min-height: 640px;
+    preferred-width: 1060px;
+    preferred-height: 700px;
+    background: Palette.bg;
+
+    in-out property <[CategoryRow]> safe-categories;
+    in-out property <[CategoryRow]> aggressive-categories;
+    in-out property <[ResultRow]> results;
+    in-out property <int> result-count: 0;
+    in-out property <int> selected-count: 0;
+    in-out property <bool> has-scanned: false;
+    in-out property <bool> busy: false;
+    in-out property <bool> show-aggressive: false;
+    in-out property <bool> confirm-open: false;
+    in property <bool> is-admin;
+    in-out property <string> total-text: "—";
+    in-out property <string> files-text: "—";
+    in-out property <string> selection-text: "Nothing selected";
+    in-out property <string> status-text: "Choose categories and press Scan.";
+    in-out property <string> confirm-detail: "";
+
+    callback scan-requested();
+    callback clean-requested();
+    callback clean-confirmed();
+    callback clean-cancelled();
+    callback toggle-safe(int);
+    callback toggle-aggressive(int);
+    callback toggle-result(int);
+    callback select-all();
+    callback select-none();
+    callback age-changed(string);
+    callback aggressive-changed(bool);
+
+    HorizontalLayout {
+        padding: 16px;
+        spacing: 16px;
+
+        VerticalLayout {
+            width: 268px;
+            spacing: 12px;
+
+            HorizontalLayout {
+                spacing: 10px;
+                Image {
+                    source: @image-url("../assets/icon-64.png");
+                    width: 32px;
+                    height: 32px;
+                }
+                VerticalLayout {
+                    spacing: 0px;
+                    Text {
+                        text: "Junky";
+                        font-size: 14px;
+                        font-weight: 700;
+                        color: Palette.ink;
+                    }
+                    Text {
+                        text: "Windows storage reclaim";
+                        font-size: 11px;
+                        color: Palette.muted;
+                    }
+                }
+            }
+
+            Rectangle {
+                height: 1px;
+                background: Palette.border;
+            }
+
+            ScrollView {
+                vertical-stretch: 1;
+                VerticalLayout {
+                    spacing: 4px;
+                    SectionLabel { text: "SAFE CLEANERS"; }
+                    for cat[i] in safe-categories: CategoryCheckRow {
+                        label: cat.label;
+                        detail: cat.detail;
+                        checked: cat.checked;
+                        active: !root.busy;
+                        size-text: cat.size-text;
+                        toggled => { root.toggle-safe(i); }
+                    }
+                    Rectangle { height: 8px; }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        Switch {
+                            checked: root.show-aggressive;
+                            toggled => {
+                                root.show-aggressive = !root.show-aggressive;
+                                root.aggressive-changed(root.show-aggressive);
+                            }
+                        }
+                        Text {
+                            text: "Aggressive cleaners";
+                            font-size: 12px;
+                            font-weight: 600;
+                            color: Palette.ink;
+                            vertical-alignment: center;
+                        }
+                    }
+                    if show-aggressive: VerticalLayout {
+                        spacing: 4px;
+                        for cat[i] in aggressive-categories: CategoryCheckRow {
+                            label: cat.label;
+                            detail: cat.detail;
+                            checked: cat.checked;
+                            active: !root.busy;
+                            size-text: cat.size-text;
+                            toggled => { root.toggle-aggressive(i); }
+                        }
+                    }
+                }
+            }
+
+            if !is-admin: Text {
+                text: "Administrator rights unlock system locations. Locked files are skipped.";
+                font-size: 11px;
+                color: Palette.muted;
+                wrap: word-wrap;
+            }
+        }
+
+        Rectangle {
+            width: 1px;
+            background: Palette.border;
+        }
+
+        VerticalLayout {
+            spacing: 12px;
+            horizontal-stretch: 1;
+
+            HorizontalLayout {
+                spacing: 12px;
+                alignment: space-between;
+                VerticalLayout {
+                    spacing: 2px;
+                    Text {
+                        text: "Dashboard";
+                        font-size: 20px;
+                        font-weight: 700;
+                        color: Palette.ink;
+                    }
+                    Text {
+                        text: "Scan first, delete only what you choose.";
+                        font-size: 12px;
+                        color: Palette.muted;
+                    }
+                }
+                HorizontalLayout {
+                    spacing: 8px;
+                    Text {
+                        text: "Older than";
+                        font-size: 12px;
+                        color: Palette.muted;
+                        vertical-alignment: center;
+                    }
+                    ComboBox {
+                        width: 180px;
+                        model: ["Any age", "Older than 24 hours", "Older than 7 days"];
+                        selected(value) => { root.age-changed(value); }
+                    }
+                    ActionButton {
+                        text: "Scan";
+                        kind: "primary";
+                        active: !root.busy;
+                        clicked => { root.scan-requested(); }
+                    }
+                }
+            }
+
+            Rectangle {
+                background: Palette.surface;
+                border-radius: 12px;
+                border-width: 1px;
+                border-color: Palette.border;
+                HorizontalLayout {
+                    padding: 16px;
+                    spacing: 32px;
+                    StatBlock { label: "Reclaimable"; value: root.total-text; highlight: true; }
+                    StatBlock { label: "Junk files"; value: root.files-text; }
+                    StatBlock { label: "Selected"; value: root.selection-text; }
+                }
+            }
+
+            HorizontalLayout {
+                spacing: 8px;
+                alignment: space-between;
+                Text {
+                    text: "Results";
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: Palette.ink;
+                    vertical-alignment: center;
+                }
+                HorizontalLayout {
+                    spacing: 8px;
+                    ActionButton {
+                        text: "Select all";
+                        kind: "ghost";
+                        compact: true;
+                        active: !root.busy && root.result-count > 0;
+                        clicked => { root.select-all(); }
+                    }
+                    ActionButton {
+                        text: "Clear";
+                        kind: "ghost";
+                        compact: true;
+                        active: !root.busy && root.result-count > 0;
+                        clicked => { root.select-none(); }
+                    }
+                }
+            }
+
+            if !has-scanned: Rectangle {
+                background: Palette.surface;
+                border-radius: 12px;
+                border-width: 1px;
+                border-color: Palette.border;
+                VerticalLayout {
+                    padding: 28px;
+                    spacing: 4px;
+                    alignment: center;
+                    Text {
+                        text: "Nothing scanned yet";
+                        font-size: 14px;
+                        font-weight: 600;
+                        color: Palette.ink;
+                        horizontal-alignment: center;
+                    }
+                    Text {
+                        text: "Tick the categories on the left, then press Scan to preview what can be reclaimed.";
+                        font-size: 12px;
+                        color: Palette.muted;
+                        horizontal-alignment: center;
+                    }
+                }
+            }
+
+            if has-scanned && result-count == 0: Rectangle {
+                background: Palette.surface;
+                border-radius: 12px;
+                border-width: 1px;
+                border-color: Palette.border;
+                VerticalLayout {
+                    padding: 28px;
+                    spacing: 4px;
+                    alignment: center;
+                    Text {
+                        text: "Already clean";
+                        font-size: 14px;
+                        font-weight: 600;
+                        color: Palette.accent;
+                        horizontal-alignment: center;
+                    }
+                    Text {
+                        text: "No junk found in the selected categories.";
+                        font-size: 12px;
+                        color: Palette.muted;
+                        horizontal-alignment: center;
+                    }
+                }
+            }
+
+            if result-count > 0: ListView {
+                vertical-stretch: 1;
+                for row[i] in results: ResultRowView {
+                    selected: row.selected;
+                    category: row.category;
+                    path: row.path;
+                    size-text: row.size-text;
+                    risk: row.risk;
+                    active: !root.busy;
+                    toggled => { root.toggle-result(i); }
+                }
+            }
+
+            HorizontalLayout {
+                spacing: 12px;
+                alignment: space-between;
+                HorizontalLayout {
+                    spacing: 10px;
+                    ProgressIndicator {
+                        width: 140px;
+                        indeterminate: true;
+                        visible: root.busy;
+                    }
+                    Text {
+                        text: root.status-text;
+                        font-size: 12px;
+                        color: Palette.muted;
+                        vertical-alignment: center;
+                    }
+                }
+                ActionButton {
+                    text: "Clean selected";
+                    kind: "danger";
+                    active: !root.busy && root.selected-count > 0;
+                    clicked => { root.clean-requested(); }
+                }
+            }
+        }
+    }
+
+    if confirm-open: Rectangle {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+        background: #00000080;
+        TouchArea { }
+        Rectangle {
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            width: 440px;
+            height: 216px;
+            background: Palette.surface;
+            border-radius: 12px;
+            border-width: 1px;
+            border-color: Palette.border;
+            VerticalLayout {
+                padding: 20px;
+                spacing: 10px;
+                Text {
+                    text: "Delete selected files?";
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: Palette.ink;
+                }
+                Text {
+                    text: root.confirm-detail;
+                    font-size: 13px;
+                    color: Palette.muted;
+                    wrap: word-wrap;
+                }
+                Text {
+                    text: "This cannot be undone.";
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: Palette.danger;
+                }
+                HorizontalLayout {
+                    spacing: 8px;
+                    alignment: end;
+                    ActionButton {
+                        text: "Cancel";
+                        kind: "ghost";
+                        clicked => { root.clean-cancelled(); }
+                    }
+                    ActionButton {
+                        text: "Delete";
+                        kind: "danger";
+                        clicked => { root.clean-confirmed(); }
+                    }
+                }
+            }
+        }
+    }
+}

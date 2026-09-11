@@ -1,0 +1,169 @@
+import { CheckBox } from "std-widgets.slint";
+
+export global Palette {
+    in property <color> bg: #0b0f14;
+    in property <color> surface: #12181f;
+    in property <color> raised: #1a222c;
+    in property <color> border: #26313d;
+    in property <color> ink: #e9eff5;
+    in property <color> muted: #9fadb9;
+    in property <color> faint: #79848f;
+    in property <color> accent: #2dd4bf;
+    in property <color> accent-ink: #052e29;
+    in property <color> accent-tint: #2dd4bf24;
+    in property <color> danger: #f87171;
+    in property <color> danger-ink: #300b0b;
+    in property <color> amber: #fbbf24;
+    in property <color> amber-tint: #fbbf2424;
+}
+
+export component SectionLabel inherits Text {
+    font-size: 11px;
+    font-weight: 700;
+    color: Palette.muted;
+}
+
+export component Badge inherits Rectangle {
+    in property <string> text;
+    in property <bool> warn;
+    min-width: 84px;
+    height: 20px;
+    border-radius: 4px;
+    background: warn ? Palette.amber-tint : Palette.accent-tint;
+    Text {
+        text: root.text;
+        font-size: 10px;
+        font-weight: 700;
+        color: warn ? Palette.amber : Palette.accent;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}
+
+export component ActionButton inherits Rectangle {
+    in property <string> text;
+    in property <string> kind;
+    in property <bool> compact;
+    in property <bool> active: true;
+    callback clicked();
+    min-width: compact ? 0px : 120px;
+    height: compact ? 32px : 40px;
+    border-radius: 8px;
+    opacity: (active && touch.pressed) ? 0.82 : 1;
+    background: !active ? Palette.raised : kind == "danger" ? Palette.danger : kind == "ghost" ? #00000000 : Palette.accent;
+    border-width: kind == "ghost" && active ? 1px : 0px;
+    border-color: Palette.border;
+    touch := TouchArea {
+        enabled: root.active;
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+    Text {
+        text: root.text;
+        font-size: compact ? 13px : 14px;
+        font-weight: 600;
+        color: !root.active ? Palette.faint : root.kind == "danger" ? Palette.danger-ink : root.kind == "ghost" ? Palette.ink : Palette.accent-ink;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}
+
+export component CategoryCheckRow inherits HorizontalLayout {
+    in property <string> label;
+    in property <string> detail;
+    in property <bool> checked;
+    in property <bool> active: true;
+    in property <string> size-text;
+    callback toggled();
+    spacing: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    CheckBox {
+        enabled: root.active;
+        checked: root.checked;
+        toggled => { root.toggled(); }
+    }
+    VerticalLayout {
+        spacing: 1px;
+        horizontal-stretch: 1;
+        Text {
+            text: root.label;
+            font-size: 13px;
+            font-weight: 600;
+            color: Palette.ink;
+        }
+        Text {
+            text: root.detail;
+            font-size: 11px;
+            color: Palette.muted;
+        }
+    }
+    Text {
+        text: root.size-text;
+        font-size: 12px;
+        font-weight: 600;
+        color: Palette.muted;
+    }
+}
+
+export component ResultRowView inherits HorizontalLayout {
+    in property <bool> selected;
+    in property <string> category;
+    in property <string> path;
+    in property <string> size-text;
+    in property <string> risk;
+    in property <bool> active: true;
+    callback toggled();
+    spacing: 10px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    CheckBox {
+        enabled: root.active;
+        checked: root.selected;
+        toggled => { root.toggled(); }
+    }
+    VerticalLayout {
+        spacing: 1px;
+        horizontal-stretch: 1;
+        Text {
+            text: root.category;
+            font-size: 12px;
+            font-weight: 600;
+            color: Palette.ink;
+        }
+        Text {
+            text: root.path;
+            font-size: 11px;
+            color: Palette.muted;
+            overflow: elide;
+        }
+    }
+    Text {
+        text: root.size-text;
+        font-size: 12px;
+        font-weight: 600;
+        color: Palette.ink;
+    }
+    Badge {
+        text: root.risk == "aggressive" ? "AGGRESSIVE" : "SAFE";
+        warn: root.risk == "aggressive";
+    }
+}
+
+export component StatBlock inherits VerticalLayout {
+    in property <string> label;
+    in property <string> value;
+    in property <bool> highlight;
+    spacing: 2px;
+    Text {
+        text: root.label;
+        font-size: 12px;
+        color: Palette.muted;
+    }
+    Text {
+        text: root.value;
+        font-size: 26px;
+        font-weight: 700;
+        color: root.highlight ? Palette.accent : Palette.ink;
+    }
+}

@@ -1,45 +1,75 @@
-## Disk Cleaner for Windows [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/) [![PyPi version](https://badgen.net/pypi/v/pip/)](https://pypi.org/project/pip) [![GitHub license](https://img.shields.io/github/license/Naereen/StrapDown.js.svg)](https://github.com/Naereen/StrapDown.js/blob/master/LICENSE)
+# Junky
 
-#### A <12 KB sized utility to clean trash from your `C:/` drive in Windows.
+<img src="assets/icon.svg" width="72" alt="Junky logo">
 
-### Run
+Safe, scan-first junk cleaner for Windows, written in Rust. It targets known
+junk locations instead of sweeping the whole drive by extension.
 
-- Setup python virtual environment:
-
-```console
-$ python -m venv .virtual_env_name
-```
-
-- Activate venv:
+## Desktop app
 
 ```console
-$ source .venv/bin/activate
+cargo run --release --bin junky-gui
 ```
 
-- Install dependencies in virtual env:
+Dark dashboard with a category sidebar (safe always visible, aggressive
+behind a switch), reclaimable-size hero stats, per-file selection, an age
+filter, background scanning with a progress state, and a confirm dialog
+before anything is deleted. The same engine also ships as a CLI (below).
+
+## Safety model
+
+- Targeted roots only: Temp folders, Update cache, caches, error reports.
+- Extension filters apply inside those roots, never across the whole drive.
+- Blocklist never touches System32, WinSxS, Installer, or Package Cache.
+- Symlinks are never followed. Locked files are skipped, not forced.
+- `scan` previews everything. `clean` refuses to run without `--yes`.
+- Aggressive cleaners (Prefetch, previous Windows installs, stray-extension
+  sweep) are off unless `--include-aggressive` is passed.
+
+## Safe cleaners (default)
+
+user-temp, system-temp, update-cache, delivery-optimization, recycle-bin,
+thumbnail-cache, icon-cache, internet-cache, error-reports, crash-dumps,
+shader-cache, office-cache, app-caches, defender-history, windows-logs,
+browser-edge, browser-chrome, browser-firefox, browser-brave.
+
+## Aggressive cleaners (opt-in)
+
+prefetch, windows-old, extension-sweep, font-cache.
+
+## Never touched
+
+WinSxS component store (use `DISM /Online /Cleanup-Image
+/StartComponentCleanup` instead), Windows Installer, Package Cache, update
+database (`SoftwareDistribution/DataStore`), signature catalogs (catroot2),
+Office install cache (MSOCache), the Recovery image, and the Search index.
+Only the contents of `SoftwareDistribution/Download` are cleaned, after
+updates are installed.
+
+## Usage (CLI)
 
 ```console
-$ python -m pip install requirements.txt
+junky list
+junky scan
+junky scan --include-aggressive --older-than-hours 24 --limit 20
+junky scan --json
+junky clean --yes
+junky clean --yes --include-aggressive --json
 ```
 
-> Note: Or you can install dependencies manually using `pip install package_name` if you encounter any repository-related error.
+## Build the exes
 
-- Run the `src/main.py` and scan for junk before proceeding to clean it (ofc).
+On Windows:
 
-### Interface
+```console
+cargo build --release --bins
+```
 
-- Choosing an option:
+This produces `target/release/junky.exe` (CLI) and
+`target/release/junky-gui.exe` (desktop app, no console window). CI builds
+and uploads both on every push. For local development on macOS/Linux, point
+the Windows roots at a fixture tree:
 
-<div align="center">
-    <img src="assets/1.png" alt="Option 1">
-</div><br>
-
-- Analysing junk...
-<div align="center">
-    <img src="assets/3.png" alt="Junk Analysis">
-</div><br>
-
-- Cleaning junk...
-<div align="center">
-    <img src="assets/2.png" alt="Junk Cleaning">
-</div>
+```console
+JUNKY_TEST_ROOT=/tmp/jc-test junky scan
+```
