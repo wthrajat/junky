@@ -2,8 +2,8 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-TEAL = (45, 212, 191, 255)
-DARK = (5, 46, 41, 255)
+ACCENT = (249, 115, 22, 255)
+INK = (43, 22, 8, 255)
 GRID = 64
 SCALE = 16
 PIXELS = GRID * SCALE
@@ -21,9 +21,9 @@ def box(pen, x, y, w, h, r, fill):
 def render(pixels):
     art = Image.new("RGBA", (PIXELS, PIXELS), (0, 0, 0, 0))
     pen = ImageDraw.Draw(art)
-    box(pen, 4, 4, 56, 56, 14, TEAL)
-    box(pen, 27, 13, 10, 5, 2.5, DARK)
-    box(pen, 19, 20, 26, 5, 2.5, DARK)
+    box(pen, 4, 4, 56, 56, 14, ACCENT)
+    box(pen, 27, 13, 10, 5, 2.5, INK)
+    box(pen, 19, 20, 26, 5, 2.5, INK)
     pen.polygon(
         [
             (23 * SCALE, 27 * SCALE),
@@ -31,10 +31,10 @@ def render(pixels):
             (38.6 * SCALE, 49.4 * SCALE),
             (25.4 * SCALE, 49.4 * SCALE),
         ],
-        fill=DARK,
+        fill=INK,
     )
-    box(pen, 28.6, 33, 2.8, 11, 1.4, TEAL)
-    box(pen, 32.6, 33, 2.8, 11, 1.4, TEAL)
+    box(pen, 28.6, 33, 2.8, 11, 1.4, ACCENT)
+    box(pen, 32.6, 33, 2.8, 11, 1.4, ACCENT)
     return art.resize((pixels, pixels), Image.LANCZOS)
 
 
