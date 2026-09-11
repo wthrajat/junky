@@ -86,12 +86,14 @@ python3 -m venv /tmp/iconenv
 
 ## Releases
 
-1. Bump `version` in `Cargo.toml`.
-2. On Windows, run `cargo build --release --bins`.
-3. Attach `target/release/junky-gui.exe` and `target/release/junky.exe`
-   to a new GitHub Release with notes listing reclaimed categories.
-4. Unsigned builds trigger SmartScreen; users pick More info, then Run
-   anyway. A code-signing certificate removes that prompt.
+1. Bump `version` in `Cargo.toml` and commit it.
+2. Tag the release: `git tag -s v0.1.0 -m "v0.1.0"` (match the version).
+3. Push the tag: `git push origin v0.1.0`.
+4. `.github/workflows/release.yml` builds both exes on Windows and
+   attaches them to the GitHub Release automatically.
+
+Unsigned builds trigger SmartScreen; users pick More info, then Run
+anyway. A code-signing certificate removes that prompt.
 
 CI (`.github/workflows/rust.yml`) runs fmt, clippy, tests, and a release
 build on Windows, uploading both exes as artifacts.
