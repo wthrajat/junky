@@ -1,89 +1,44 @@
 <div align="center">
   <img src="assets/icon.svg" width="96" alt="Junky logo">
   <h1>Junky</h1>
-  <p><strong>Reclaim gigabytes of Windows disk space — safely.</strong></p>
-  <p>Scan-first junk cleaner with a calm native UI.<br>No guesswork. Nothing deleted without your say-so.</p>
+  <p><strong>Reclaim gigabytes of Windows disk space, safely.</strong></p>
+  <p>A junk cleaner that scans first and asks before deleting anything.<br>Calm native UI. No guesswork.</p>
   <p>
     <a href="https://github.com/wthrajat/junky/releases/latest"><img src="https://img.shields.io/github/v/release/wthrajat/junky" alt="Latest release"></a>
-    <a href="https://github.com/wthrajat/junky/releases"><img src="https://img.shields.io/github/downloads/wthrajat/junky/total" alt="Total downloads"></a>
     <a href="https://github.com/wthrajat/junky/actions/workflows/rust.yml"><img src="https://github.com/wthrajat/junky/actions/workflows/rust.yml/badge.svg" alt="Build status"></a>
     <a href="LICENSE"><img src="https://img.shields.io/github/license/wthrajat/junky" alt="License: MIT"></a>
-    <a href="https://www.rust-lang.org"><img src="https://img.shields.io/badge/Made_with-Rust-ce422b?logo=rust&logoColor=white" alt="Made with Rust"></a>
-    <img src="https://img.shields.io/badge/Platform-Windows-0078D4?logo=windows&logoColor=white" alt="Platform: Windows">
   </p>
   <p><a href="https://github.com/wthrajat/junky/releases/latest"><strong>Download for Windows</strong></a></p>
 </div>
 
 ## Download
 
-1. Grab **`junky-gui.exe`** from the [latest release](https://github.com/wthrajat/junky/releases/latest) (or `junky.exe` for the CLI).
-2. Run it. The build is unsigned, so SmartScreen asks once — choose More info, then Run anyway.
-3. Pick categories, press **Scan**, review, then **Clean**.
+* Grab **`junky-gui.exe`** from the [latest release](https://github.com/wthrajat/junky/releases/latest) (or `junky.exe` for the command line).
+* Run it. The build is unsigned, so SmartScreen asks once. Choose More info, then Run anyway.
+* Pick categories, press **Scan**, review, then **Clean**.
 
-Portable, no installer. Admin rights unlock system locations; everything else works as a normal user.
+Portable, no installer. Admin rights unlock system locations. Everything else works as a normal user.
 
 ## Why Junky
 
-- **Scan first, always.** You see every file and its size before anything is deleted.
-- **Targeted, not spray-and-pray.** 23 cleaners hit known junk locations instead of hunting the whole drive by extension.
-- **Locked files are skipped, never forced.** No crashes, no half-deleted updates.
-- **Small and offline.** Native Rust, ~17 MB app, no runtime to install, no account, no telemetry.
+* **Scan first, always.** You see every file and its size before anything is deleted.
+* **Targeted cleanup.** Junky empties known junk locations instead of sweeping the whole drive for file extensions.
+* **Skips what is busy.** Locked files are left alone, so updates and apps never break while cleaning.
+* **Small and offline.** A native app with no installer, no account, and no telemetry.
 
 ## Safety first
 
-- Aggressive cleaners stay off unless you opt in.
-- System32, WinSxS, Installer, Package Cache, the update database, signature catalogs, and the Recovery image are never touched — by blocklist, with tests.
-- Symlinks are never followed. Cleaning previews first and confirms before deleting.
+* The optional deep clean stays off unless you turn it on.
+* Core Windows locations are never touched: System32, WinSxS, Installer, the update database, and Recovery.
+* Shortcuts are never followed. Every clean shows a preview and asks for confirmation.
 
 ## What's inside
 
-<details>
-<summary><strong>19 safe cleaners</strong> (on by default)</summary>
+Junky covers the usual suspects: temporary folders, Windows Update leftovers, the Recycle Bin, thumbnail and icon caches, browser caches, app caches for tools like Office, Teams, Discord, Slack, and VS Code, plus crash reports and logs.
 
-| Cleaner | Reclaims |
-|---|---|
-| user-temp | Your temporary files |
-| system-temp | Windows Temp plus service temps |
-| update-cache | Downloaded update payloads |
-| delivery-optimization | Shared update cache, all known locations |
-| recycle-bin | Every drive's recycle bin |
-| thumbnail-cache | Explorer thumbnail database |
-| icon-cache | Explorer icon database |
-| internet-cache | Temporary internet files |
-| error-reports | Crash report queues |
-| crash-dumps | Minidumps and kernel dumps |
-| shader-cache | DirectX, NVIDIA, AMD, and Intel caches |
-| office-cache | Office sync leftovers |
-| app-caches | Discord, Slack, VS Code, and Teams caches |
-| defender-history | Defender scan history and logs |
-| windows-logs | Setup, servicing, and IIS logs |
-| browser-edge | Edge web cache only |
-| browser-chrome | Chrome web cache only |
-| browser-firefox | Firefox web cache only |
-| browser-brave | Brave web cache only |
+For machines that need more, an optional deep clean handles previous Windows installs, prefetch data, stray temp files, and the font cache.
 
-</details>
-
-<details>
-<summary><strong>4 aggressive cleaners</strong> (opt-in)</summary>
-
-| Cleaner | Reclaims |
-|---|---|
-| prefetch | Launch prefetch traces |
-| windows-old | Prior installs and upgrade scraps |
-| extension-sweep | Stray temp files and Thumbs.db, all drives |
-| font-cache | Font rasterizer cache |
-
-</details>
-
-<details>
-<summary><strong>Never touched</strong></summary>
-
-WinSxS component store (use `DISM /Online /Cleanup-Image /StartComponentCleanup` instead), Windows Installer, Package Cache, the update database, signature catalogs, the Office install cache, the Recovery image, and the Search index.
-
-</details>
-
-## CLI for power users
+## Prefer the terminal
 
 ```console
 junky scan --include-aggressive --older-than-hours 24
@@ -92,8 +47,8 @@ junky clean --yes
 
 ## Development
 
-See [docs/development.md](docs/development.md) for setup, testing with a fixture tree, project layout, and the release process.
+See [docs/development.md](docs/development.md) for setup, testing, and how releases are built.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
