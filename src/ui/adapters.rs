@@ -54,14 +54,6 @@ pub enum ThemeMode {
     Dark,
 }
 
-pub fn theme_mode_for_label(label: &str) -> ThemeMode {
-    match label {
-        "Light" => ThemeMode::Light,
-        "Dark" => ThemeMode::Dark,
-        _ => ThemeMode::System,
-    }
-}
-
 pub fn run_scan(checked_ids: &[String], age: MinimumAge) -> ScanSummary {
     let cleaners: Vec<_> = all_cleaners(true)
         .into_iter()
@@ -159,10 +151,8 @@ fn category_detail(id: &str, needs_admin: bool) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::ThemeMode;
     use super::confirm_detail;
     use super::minimum_age_for_label;
-    use super::theme_mode_for_label;
 
     #[test]
     fn maps_age_labels() {
@@ -178,12 +168,5 @@ mod tests {
     fn describes_confirmation() {
         let text = confirm_detail(3, 2048);
         assert!(text.contains('3'));
-    }
-
-    #[test]
-    fn maps_theme_labels() {
-        assert_eq!(theme_mode_for_label("System"), ThemeMode::System);
-        assert_eq!(theme_mode_for_label("Light"), ThemeMode::Light);
-        assert_eq!(theme_mode_for_label("Dark"), ThemeMode::Dark);
     }
 }

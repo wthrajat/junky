@@ -7,21 +7,22 @@ export global Palette {
     in property <color> ink: dark ? #e9eff5 : #16181d;
     in property <color> muted: dark ? #9fadb9 : #4d5a66;
     in property <color> faint: dark ? #79848f : #6d7883;
-    in property <color> accent: dark ? #2dd4bf : #007a6e;
-    in property <color> accent-ink: dark ? #052e29 : #ffffff;
-    in property <color> accent-tint: dark ? #2dd4bf24 : #007a6e1a;
+    in property <color> accent: dark ? #f472b6 : #be185d;
+    in property <color> accent-ink: dark ? #2b0a1a : #ffffff;
+    in property <color> accent-tint: dark ? #f472b624 : #be185d1a;
     in property <color> danger: dark ? #f87171 : #c42b1c;
     in property <color> danger-ink: dark ? #300b0b : #ffffff;
     in property <color> amber: dark ? #fbbf24 : #7a5900;
     in property <color> amber-tint: dark ? #fbbf2424 : #7a590017;
     in property <color> track: dark ? #2a343f : #d3d9df;
     in property <color> row-hover: dark ? #ffffff0d : #0000000a;
-    in property <color> row-select: dark ? #2dd4bf14 : #007a6e12;
+    in property <color> row-select: dark ? #f472b614 : #be185d14;
 }
 
 export component SectionLabel inherits Text {
     font-size: 11px;
     font-weight: 700;
+    letter-spacing: 1px;
     color: Palette.muted;
 }
 
@@ -249,7 +250,7 @@ export component CategoryCheckRow inherits Rectangle {
                 }
                 Text {
                     text: root.detail;
-                    font-size: 11px;
+                    font-size: 12px;
                     color: Palette.muted;
                     overflow: elide;
                 }
@@ -300,18 +301,18 @@ export component ResultRowView inherits Rectangle {
         VerticalLayout {
             spacing: 1px;
             horizontal-stretch: 1;
-            Text {
-                text: root.category;
-                font-size: 12px;
-                font-weight: 600;
-                color: Palette.ink;
-            }
-            Text {
-                text: root.path;
-                font-size: 11px;
-                color: Palette.muted;
-                overflow: elide;
-            }
+        Text {
+            text: root.category;
+            font-size: 13px;
+            font-weight: 600;
+            color: Palette.ink;
+        }
+        Text {
+            text: root.path;
+            font-size: 12px;
+            color: Palette.muted;
+            overflow: elide;
+        }
         }
         Text {
             text: root.size-text;
@@ -320,10 +321,10 @@ export component ResultRowView inherits Rectangle {
             color: Palette.ink;
             vertical-alignment: center;
         }
-        Badge {
-            text: root.risk == "aggressive" ? "AGGRESSIVE" : "SAFE";
-            warn: root.risk == "aggressive";
-        }
+    if root.risk == "aggressive": Badge {
+        text: "AGGRESSIVE";
+        warn: true;
+    }
     }
 }
 
@@ -339,7 +340,7 @@ export component StatBlock inherits VerticalLayout {
     }
     Text {
         text: root.value;
-        font-size: 26px;
+        font-size: 30px;
         font-weight: 700;
         color: root.highlight ? Palette.accent : Palette.ink;
     }

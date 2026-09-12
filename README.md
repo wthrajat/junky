@@ -1,8 +1,8 @@
 <div align="center">
   <img src="assets/icon.svg" width="96" alt="Junky logo">
   <h1>Junky</h1>
-  <p><strong>Reclaim gigabytes of Windows disk space, safely.</strong></p>
-  <p>A junk cleaner that scans first and asks before deleting anything.<br>Calm native UI. No guesswork.</p>
+  <p><strong>Junk Cleaner for Windows.</strong></p>
+  <p>Scans first. Deletes nothing without your approval.<br>Calm native UI. No guesswork.</p>
   <p>
     <a href="https://github.com/wthrajat/junky/releases/latest"><img src="https://img.shields.io/github/v/release/wthrajat/junky" alt="Latest release"></a>
     <a href="https://github.com/wthrajat/junky/actions/workflows/rust.yml"><img src="https://github.com/wthrajat/junky/actions/workflows/rust.yml/badge.svg" alt="Build status"></a>

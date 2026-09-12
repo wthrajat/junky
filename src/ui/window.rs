@@ -73,7 +73,6 @@ impl Session {
         ui.set_aggressive_categories(ModelRc::new(self.handles.aggressive.clone()));
         ui.set_results(ModelRc::new(self.handles.results.clone()));
         ui.set_is_admin(is_elevated());
-        ui.set_theme_index(0);
         apply_theme(ui, adapters::ThemeMode::System);
     }
 
@@ -200,8 +199,12 @@ impl Session {
 
         let weak = ui.as_weak();
         let session = Rc::clone(self);
-        ui.on_theme_changed(move |label| {
-            let mode = adapters::theme_mode_for_label(&label);
+        ui.on_theme_set(move |dark| {
+            let mode = if dark {
+                adapters::ThemeMode::Dark
+            } else {
+                adapters::ThemeMode::Light
+            };
             *session.theme.lock().unwrap() = mode;
             if let Some(ui) = weak.upgrade() {
                 apply_theme(&ui, mode);
@@ -273,13 +276,7 @@ impl Session {
         let guard = self.snapshot.lock().unwrap();
         let (count, bytes) = adapters::selection_summary(&guard, &flags);
         ui.set_selected_count(count as i32);
-        ui.set_selection_text(
-            format!(
-                "{count} files · {size}",
-                size = crate::core::size_format::format_bytes(bytes)
-            )
-            .into(),
-        );
+        ui.set_selection_text(crate::core::size_format::format_bytes(bytes).into());
     }
 }
 
@@ -328,8 +325,8 @@ fn present_scan(
         format!("Found {files} files using {total}.")
     };
     ui.set_status_text(status.unwrap_or(default_status).into());
-    ui.set_selected_count(result_count as i32);
-    ui.set_selection_text(format!("{files} files · {total}").into());
+    ui.set_selected_count(summary.files as i32);
+    ui.set_selection_text(total.clone().into());
 }
 
 fn apply_theme(ui: &MainWindow, mode: adapters::ThemeMode) {

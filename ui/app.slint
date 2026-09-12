@@ -35,7 +35,6 @@ export component MainWindow inherits Window {
     in-out property <int> result-count: 0;
     in-out property <int> selected-count: 0;
     in-out property <int> age-index: 0;
-    in-out property <int> theme-index: 0;
     in-out property <bool> has-scanned: false;
     in-out property <bool> busy: false;
     in-out property <bool> show-aggressive: false;
@@ -44,7 +43,7 @@ export component MainWindow inherits Window {
     in property <bool> is-admin;
     in-out property <string> total-text: "—";
     in-out property <string> files-text: "—";
-    in-out property <string> selection-text: "Nothing selected";
+    in-out property <string> selection-text: "—";
     in-out property <string> status-text: "Choose categories and press Scan.";
     in-out property <string> confirm-detail: "";
 
@@ -58,7 +57,7 @@ export component MainWindow inherits Window {
     callback select-all();
     callback select-none();
     callback age-changed(string);
-    callback theme-changed(string);
+    callback theme-set(bool);
     callback aggressive-changed(bool);
 
     pulse-timer := Timer {
@@ -87,15 +86,10 @@ export component MainWindow inherits Window {
                 VerticalLayout {
                     spacing: 0px;
                     Text {
-                        text: "Junky";
+                        text: "Junk Cleaner";
                         font-size: 14px;
                         font-weight: 700;
                         color: Palette.ink;
-                    }
-                    Text {
-                        text: "Windows storage reclaim";
-                        font-size: 11px;
-                        color: Palette.muted;
                     }
                 }
             }
@@ -109,7 +103,7 @@ export component MainWindow inherits Window {
                 vertical-stretch: 1;
                 VerticalLayout {
                     spacing: 2px;
-                    SectionLabel { text: "SAFE CLEANERS"; }
+                    SectionLabel { text: "Cleaners"; }
                     for cat[i] in safe-categories: CategoryCheckRow {
                         label: cat.label;
                         detail: cat.detail;
@@ -154,13 +148,18 @@ export component MainWindow inherits Window {
             }
 
             Rectangle { height: 10px; }
-            SectionLabel { text: "APPEARANCE"; }
-            SegmentedControl {
-                options: ["System", "Light", "Dark"];
-                current: root.theme-index;
-                picked(index, value) => {
-                    root.theme-index = index;
-                    root.theme-changed(value);
+            HorizontalLayout {
+                spacing: 8px;
+                CustomSwitch {
+                    on: Palette.dark;
+                    toggled => { root.theme-set(!Palette.dark); }
+                }
+                Text {
+                    text: "Dark mode";
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: Palette.ink;
+                    vertical-alignment: center;
                 }
             }
 
@@ -225,9 +224,9 @@ export component MainWindow inherits Window {
                 HorizontalLayout {
                     padding: 16px;
                     spacing: 32px;
-                    StatBlock { label: "Reclaimable"; value: root.total-text; highlight: true; }
-                    StatBlock { label: "Junk files"; value: root.files-text; }
-                    StatBlock { label: "Selected"; value: root.selection-text; }
+                    StatBlock { label: "Total found"; value: root.total-text; highlight: true; }
+                    StatBlock { label: "Total files"; value: root.files-text; }
+                    StatBlock { label: "Total selected"; value: root.selection-text; }
                 }
             }
 
@@ -277,7 +276,7 @@ export component MainWindow inherits Window {
                         horizontal-alignment: center;
                     }
                     Text {
-                        text: "Tick the categories on the left, then press Scan to preview what can be reclaimed.";
+                        text: "Tick the categories on the left, then press Scan to find junk you can safely delete.";
                         font-size: 12px;
                         color: Palette.muted;
                         horizontal-alignment: center;
@@ -374,7 +373,7 @@ export component MainWindow inherits Window {
                 spacing: 10px;
                 Text {
                     text: "Delete selected files?";
-                    font-size: 16px;
+                    font-size: 18px;
                     font-weight: 700;
                     color: Palette.ink;
                 }
