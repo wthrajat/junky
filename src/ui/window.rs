@@ -26,6 +26,7 @@ struct Session {
     handles: Rc<Handles>,
     snapshot: Arc<Mutex<Vec<JunkItem>>>,
     age_label: Rc<RefCell<String>>,
+    theme: Arc<Mutex<adapters::ThemeMode>>,
 }
 
 pub fn run() -> Result<(), slint::PlatformError> {
@@ -33,6 +34,7 @@ pub fn run() -> Result<(), slint::PlatformError> {
     let session = Session::new();
     session.apply_initial(&ui);
     session.wire(&ui);
+    session.watch_system_theme(&ui);
     ui.run()
 }
 
@@ -62,6 +64,7 @@ impl Session {
             handles,
             snapshot: Arc::new(Mutex::new(Vec::new())),
             age_label: Rc::new(RefCell::new("Any age".to_string())),
+            theme: Arc::new(Mutex::new(adapters::ThemeMode::System)),
         })
     }
 
@@ -70,6 +73,27 @@ impl Session {
         ui.set_aggressive_categories(ModelRc::new(self.handles.aggressive.clone()));
         ui.set_results(ModelRc::new(self.handles.results.clone()));
         ui.set_is_admin(is_elevated());
+        ui.set_theme_index(0);
+        apply_theme(ui, adapters::ThemeMode::System);
+    }
+
+    fn watch_system_theme(self: &Rc<Self>, ui: &MainWindow) {
+        let weak = ui.as_weak();
+        let theme = Arc::clone(&self.theme);
+        std::thread::spawn(move || {
+            let Ok(watcher) = dark_light::subscribe() else {
+                return;
+            };
+            for mode in watcher.iter() {
+                if *theme.lock().unwrap() != adapters::ThemeMode::System {
+                    continue;
+                }
+                let dark = !matches!(mode, dark_light::Mode::Light);
+                let _ = weak.upgrade_in_event_loop(move |ui| {
+                    ui.global::<Palette>().set_dark(dark);
+                });
+            }
+        });
     }
 
     fn wire(self: &Rc<Self>, ui: &MainWindow) {
@@ -171,6 +195,16 @@ impl Session {
         ui.on_aggressive_changed(move |shown| {
             if !shown {
                 uncheck_all(&session.handles.aggressive);
+            }
+        });
+
+        let weak = ui.as_weak();
+        let session = Rc::clone(self);
+        ui.on_theme_changed(move |label| {
+            let mode = adapters::theme_mode_for_label(&label);
+            *session.theme.lock().unwrap() = mode;
+            if let Some(ui) = weak.upgrade() {
+                apply_theme(&ui, mode);
             }
         });
     }
@@ -296,6 +330,21 @@ fn present_scan(
     ui.set_status_text(status.unwrap_or(default_status).into());
     ui.set_selected_count(result_count as i32);
     ui.set_selection_text(format!("{files} files · {total}").into());
+}
+
+fn apply_theme(ui: &MainWindow, mode: adapters::ThemeMode) {
+    let dark = match mode {
+        adapters::ThemeMode::System => system_dark(),
+        adapters::ThemeMode::Light => false,
+        adapters::ThemeMode::Dark => true,
+    };
+    ui.global::<Palette>().set_dark(dark);
+}
+
+fn system_dark() -> bool {
+    dark_light::detect()
+        .map(|mode| !matches!(mode, dark_light::Mode::Light))
+        .unwrap_or(true)
 }
 
 fn default_checked(

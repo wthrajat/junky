@@ -1,21 +1,22 @@
 export global Palette {
-    in property <color> bg: #0b0f14;
-    in property <color> surface: #12181f;
-    in property <color> raised: #1a222c;
-    in property <color> border: #26313d;
-    in property <color> ink: #e9eff5;
-    in property <color> muted: #9fadb9;
-    in property <color> faint: #79848f;
-    in property <color> accent: #2dd4bf;
-    in property <color> accent-ink: #052e29;
-    in property <color> accent-tint: #2dd4bf24;
-    in property <color> danger: #f87171;
-    in property <color> danger-ink: #300b0b;
-    in property <color> amber: #fbbf24;
-    in property <color> amber-tint: #fbbf2424;
-    in property <color> track: #2a343f;
-    in property <color> row-hover: #ffffff0d;
-    in property <color> row-select: #2dd4bf14;
+    in-out property <bool> dark: true;
+    in property <color> bg: dark ? #0b0f14 : #eef1f4;
+    in property <color> surface: dark ? #12181f : #ffffff;
+    in property <color> raised: dark ? #1a222c : #e6ebf0;
+    in property <color> border: dark ? #26313d : #d7dde3;
+    in property <color> ink: dark ? #e9eff5 : #16181d;
+    in property <color> muted: dark ? #9fadb9 : #4d5a66;
+    in property <color> faint: dark ? #79848f : #6d7883;
+    in property <color> accent: dark ? #2dd4bf : #007a6e;
+    in property <color> accent-ink: dark ? #052e29 : #ffffff;
+    in property <color> accent-tint: dark ? #2dd4bf24 : #007a6e1a;
+    in property <color> danger: dark ? #f87171 : #c42b1c;
+    in property <color> danger-ink: dark ? #300b0b : #ffffff;
+    in property <color> amber: dark ? #fbbf24 : #7a5900;
+    in property <color> amber-tint: dark ? #fbbf2424 : #7a590017;
+    in property <color> track: dark ? #2a343f : #d3d9df;
+    in property <color> row-hover: dark ? #ffffff0d : #0000000a;
+    in property <color> row-select: dark ? #2dd4bf14 : #007a6e12;
 }
 
 export component SectionLabel inherits Text {

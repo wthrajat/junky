@@ -1,6 +1,8 @@
 import { ListView, ScrollView } from "std-widgets.slint";
 import { ActionButton, CategoryCheckRow, CustomSwitch, Palette, ResultRowView, ScanPulse, SectionLabel, SegmentedControl, StatBlock } from "components.slint";
 
+export { Palette } from "components.slint";
+
 export struct CategoryRow {
     id: string,
     label: string,
@@ -33,6 +35,7 @@ export component MainWindow inherits Window {
     in-out property <int> result-count: 0;
     in-out property <int> selected-count: 0;
     in-out property <int> age-index: 0;
+    in-out property <int> theme-index: 0;
     in-out property <bool> has-scanned: false;
     in-out property <bool> busy: false;
     in-out property <bool> show-aggressive: false;
@@ -55,6 +58,7 @@ export component MainWindow inherits Window {
     callback select-all();
     callback select-none();
     callback age-changed(string);
+    callback theme-changed(string);
     callback aggressive-changed(bool);
 
     pulse-timer := Timer {
@@ -146,6 +150,17 @@ export component MainWindow inherits Window {
                             toggled => { root.toggle-aggressive(i); }
                         }
                     }
+                }
+            }
+
+            Rectangle { height: 10px; }
+            SectionLabel { text: "APPEARANCE"; }
+            SegmentedControl {
+                options: ["System", "Light", "Dark"];
+                current: root.theme-index;
+                picked(index, value) => {
+                    root.theme-index = index;
+                    root.theme-changed(value);
                 }
             }
 
