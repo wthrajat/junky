@@ -1,5 +1,3 @@
-import { CheckBox } from "std-widgets.slint";
-
 export global Palette {
     in property <color> bg: #0b0f14;
     in property <color> surface: #12181f;
@@ -15,6 +13,9 @@ export global Palette {
     in property <color> danger-ink: #300b0b;
     in property <color> amber: #fbbf24;
     in property <color> amber-tint: #fbbf2424;
+    in property <color> track: #2a343f;
+    in property <color> row-hover: #ffffff0d;
+    in property <color> row-select: #2dd4bf14;
 }
 
 export component SectionLabel inherits Text {
@@ -26,9 +27,9 @@ export component SectionLabel inherits Text {
 export component Badge inherits Rectangle {
     in property <string> text;
     in property <bool> warn;
-    min-width: 84px;
+    width: 88px;
     height: 20px;
-    border-radius: 4px;
+    border-radius: 2px;
     background: warn ? Palette.amber-tint : Palette.accent-tint;
     Text {
         text: root.text;
@@ -46,67 +47,225 @@ export component ActionButton inherits Rectangle {
     in property <bool> compact;
     in property <bool> active: true;
     callback clicked();
-    min-width: compact ? 0px : 120px;
-    height: compact ? 32px : 40px;
-    border-radius: 8px;
-    opacity: (active && touch.pressed) ? 0.82 : 1;
+    public function focus-self() {
+        scope.focus();
+    }
+    min-width: compact ? 0px : 104px;
+    height: compact ? 30px : 36px;
+    border-radius: 4px;
+    opacity: (active && touch.pressed) ? 0.85 : 1;
     background: !active ? Palette.raised : kind == "danger" ? Palette.danger : kind == "ghost" ? #00000000 : Palette.accent;
-    border-width: kind == "ghost" && active ? 1px : 0px;
-    border-color: Palette.border;
+    border-width: scope.has-focus ? 2px : kind == "ghost" && active ? 1px : 0px;
+    border-color: scope.has-focus ? Palette.accent : Palette.border;
+    scope := FocusScope {
+        enabled: root.active;
+        key-pressed(event) => {
+            if event.text == "\n" || event.text == " " {
+                root.clicked();
+                accept
+            } else {
+                reject
+            }
+        }
+    }
     touch := TouchArea {
         enabled: root.active;
         mouse-cursor: pointer;
         clicked => { root.clicked(); }
     }
+    HorizontalLayout {
+        padding-left: compact ? 12px : 18px;
+        padding-right: compact ? 12px : 18px;
+        alignment: center;
+        Text {
+            text: root.text;
+            font-size: compact ? 13px : 14px;
+            font-weight: 600;
+            color: !root.active ? Palette.faint : root.kind == "danger" ? Palette.danger-ink : root.kind == "ghost" ? Palette.ink : Palette.accent-ink;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+    }
+}
+
+export component CustomCheck inherits Rectangle {
+    in property <bool> checked;
+    in property <bool> active: true;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: root.checked && root.active ? Palette.accent : Palette.faint;
+    background: !root.checked ? #00000000 : root.active ? Palette.accent : Palette.track;
+    opacity: root.active ? 1 : 0.6;
     Text {
-        text: root.text;
-        font-size: compact ? 13px : 14px;
-        font-weight: 600;
-        color: !root.active ? Palette.faint : root.kind == "danger" ? Palette.danger-ink : root.kind == "ghost" ? Palette.ink : Palette.accent-ink;
+        text: "✓";
+        font-size: 12px;
+        font-weight: 700;
+        color: root.active ? Palette.accent-ink : Palette.faint;
+        visible: root.checked;
         horizontal-alignment: center;
         vertical-alignment: center;
     }
 }
 
-export component CategoryCheckRow inherits HorizontalLayout {
+export component CustomSwitch inherits Rectangle {
+    in property <bool> on;
+    in property <bool> active: true;
+    callback toggled();
+    width: 40px;
+    height: 20px;
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: root.on && root.active ? Palette.accent : Palette.faint;
+    background: root.on && root.active ? Palette.accent : Palette.track;
+    opacity: root.active ? 1 : 0.5;
+    Rectangle {
+        width: 14px;
+        height: 14px;
+        border-radius: 7px;
+        y: 3px;
+        x: root.on ? parent.width - self.width - 3px : 3px;
+        background: root.on && root.active ? Palette.accent-ink : Palette.muted;
+        animate x {
+            duration: 150ms;
+            easing: ease-out;
+        }
+    }
+    TouchArea {
+        mouse-cursor: pointer;
+        enabled: root.active;
+        clicked => { root.toggled(); }
+    }
+}
+
+export component SegmentedControl inherits Rectangle {
+    in property <[string]> options;
+    in property <int> current;
+    callback picked(int, string);
+    height: 32px;
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: Palette.border;
+    background: Palette.surface;
+    HorizontalLayout {
+        padding: 2px;
+        spacing: 2px;
+        for opt[i] in root.options: Rectangle {
+            border-radius: 4px;
+            background: i == root.current ? Palette.accent-tint : #00000000;
+            HorizontalLayout {
+                padding-left: 10px;
+                padding-right: 10px;
+                alignment: center;
+                Text {
+                    text: opt;
+                    font-size: 12px;
+                    font-weight: i == root.current ? 600 : 400;
+                    color: i == root.current ? Palette.ink : Palette.muted;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+            TouchArea {
+                mouse-cursor: pointer;
+                clicked => { root.picked(i, opt); }
+            }
+        }
+    }
+}
+
+export component MiniBar inherits Rectangle {
+    in property <float> share;
+    height: 3px;
+    border-radius: 2px;
+    background: Palette.track;
+    clip: true;
+    Rectangle {
+        width: parent.width * clamp(root.share, 0, 1);
+        height: 3px;
+        border-radius: 2px;
+        background: Palette.accent;
+    }
+}
+
+export component ScanPulse inherits Rectangle {
+    in property <bool> running;
+    in property <float> phase;
+    height: 4px;
+    border-radius: 2px;
+    background: Palette.track;
+    clip: true;
+    if running: Rectangle {
+        width: 72px;
+        height: 4px;
+        border-radius: 2px;
+        background: Palette.accent;
+        x: root.phase * (parent.width + 72px) - 72px;
+    }
+}
+
+export component CategoryCheckRow inherits Rectangle {
     in property <string> label;
     in property <string> detail;
     in property <bool> checked;
     in property <bool> active: true;
     in property <string> size-text;
+    in property <float> share;
     callback toggled();
-    spacing: 10px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    CheckBox {
+    border-radius: 4px;
+    background: touch.has-hover ? Palette.row-hover : #00000000;
+    touch := TouchArea {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+        mouse-cursor: pointer;
         enabled: root.active;
-        checked: root.checked;
-        toggled => { root.toggled(); }
+        clicked => { root.toggled(); }
     }
     VerticalLayout {
-        spacing: 1px;
-        horizontal-stretch: 1;
-        Text {
-            text: root.label;
-            font-size: 13px;
-            font-weight: 600;
-            color: Palette.ink;
+        padding-left: 8px;
+        padding-right: 8px;
+        padding-top: 6px;
+        padding-bottom: 6px;
+        spacing: 5px;
+        HorizontalLayout {
+            spacing: 10px;
+            CustomCheck {
+                checked: root.checked;
+                active: root.active;
+            }
+            VerticalLayout {
+                spacing: 1px;
+                horizontal-stretch: 1;
+                Text {
+                    text: root.label;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: Palette.ink;
+                }
+                Text {
+                    text: root.detail;
+                    font-size: 11px;
+                    color: Palette.muted;
+                }
+            }
+            Text {
+                text: root.size-text;
+                font-size: 12px;
+                font-weight: 600;
+                color: Palette.muted;
+                vertical-alignment: center;
+            }
         }
-        Text {
-            text: root.detail;
-            font-size: 11px;
-            color: Palette.muted;
+        MiniBar {
+            share: root.share;
         }
-    }
-    Text {
-        text: root.size-text;
-        font-size: 12px;
-        font-weight: 600;
-        color: Palette.muted;
     }
 }
 
-export component ResultRowView inherits HorizontalLayout {
+export component ResultRowView inherits Rectangle {
     in property <bool> selected;
     in property <string> category;
     in property <string> path;
@@ -114,39 +273,54 @@ export component ResultRowView inherits HorizontalLayout {
     in property <string> risk;
     in property <bool> active: true;
     callback toggled();
-    spacing: 10px;
-    padding-top: 6px;
-    padding-bottom: 6px;
-    CheckBox {
+    border-radius: 4px;
+    background: root.selected ? Palette.row-select : touch.has-hover ? Palette.row-hover : #00000000;
+    touch := TouchArea {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+        mouse-cursor: pointer;
         enabled: root.active;
-        checked: root.selected;
-        toggled => { root.toggled(); }
+        clicked => { root.toggled(); }
     }
-    VerticalLayout {
-        spacing: 1px;
-        horizontal-stretch: 1;
+    HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        padding-top: 6px;
+        padding-bottom: 6px;
+        spacing: 10px;
+        CustomCheck {
+            checked: root.selected;
+            active: root.active;
+        }
+        VerticalLayout {
+            spacing: 1px;
+            horizontal-stretch: 1;
+            Text {
+                text: root.category;
+                font-size: 12px;
+                font-weight: 600;
+                color: Palette.ink;
+            }
+            Text {
+                text: root.path;
+                font-size: 11px;
+                color: Palette.muted;
+                overflow: elide;
+            }
+        }
         Text {
-            text: root.category;
+            text: root.size-text;
             font-size: 12px;
             font-weight: 600;
             color: Palette.ink;
+            vertical-alignment: center;
         }
-        Text {
-            text: root.path;
-            font-size: 11px;
-            color: Palette.muted;
-            overflow: elide;
+        Badge {
+            text: root.risk == "aggressive" ? "AGGRESSIVE" : "SAFE";
+            warn: root.risk == "aggressive";
         }
-    }
-    Text {
-        text: root.size-text;
-        font-size: 12px;
-        font-weight: 600;
-        color: Palette.ink;
-    }
-    Badge {
-        text: root.risk == "aggressive" ? "AGGRESSIVE" : "SAFE";
-        warn: root.risk == "aggressive";
     }
 }
 

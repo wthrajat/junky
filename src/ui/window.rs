@@ -41,16 +41,19 @@ impl Session {
         let (safe_data, aggressive_data) = adapters::initial_categories();
         let checked = default_checked(&safe_data, &aggressive_data);
         let empty_sizes = HashMap::new();
+        let empty_shares = HashMap::new();
         let handles = Rc::new(Handles {
             safe: Rc::new(VecModel::from(category_rows(
                 &safe_data,
                 &checked,
                 &empty_sizes,
+                &empty_shares,
             ))),
             aggressive: Rc::new(VecModel::from(category_rows(
                 &aggressive_data,
                 &checked,
                 &empty_sizes,
+                &empty_shares,
             ))),
             results: Rc::new(VecModel::from(Vec::new())),
         });
@@ -255,6 +258,12 @@ fn present_scan(
 ) {
     let rows = to_result_rows(&summary);
     let sizes = adapters::category_sizes(&summary);
+    let total_bytes = summary.bytes.max(1);
+    let shares: HashMap<String, f32> = summary
+        .by_category
+        .iter()
+        .map(|(name, total)| (name.clone(), total.bytes as f32 / total_bytes as f32))
+        .collect();
     let (total, files) = adapters::totals_text(&summary);
     let result_count = summary.files;
     let empty = summary.is_empty();
@@ -264,12 +273,13 @@ fn present_scan(
 
     let (safe_data, aggressive_data) = adapters::initial_categories();
     ui.set_safe_categories(ModelRc::new(Rc::new(VecModel::from(category_rows(
-        &safe_data, checked, &sizes,
+        &safe_data, checked, &sizes, &shares,
     )))));
     ui.set_aggressive_categories(ModelRc::new(Rc::new(VecModel::from(category_rows(
         &aggressive_data,
         checked,
         &sizes,
+        &shares,
     )))));
 
     ui.set_total_text(total.clone().into());
@@ -303,6 +313,7 @@ fn category_rows(
     data: &[adapters::CategoryData],
     checked: &[String],
     sizes: &HashMap<String, String>,
+    shares: &HashMap<String, f32>,
 ) -> Vec<CategoryRow> {
     data.iter()
         .map(|entry| CategoryRow {
@@ -315,6 +326,7 @@ fn category_rows(
                 .cloned()
                 .unwrap_or_else(|| "—".to_string())
                 .into(),
+            share: shares.get(&entry.id).copied().unwrap_or(0.0),
         })
         .collect()
 }

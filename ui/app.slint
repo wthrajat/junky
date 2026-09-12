@@ -1,5 +1,5 @@
-import { CheckBox, ComboBox, ListView, ProgressIndicator, ScrollView, Switch } from "std-widgets.slint";
-import { ActionButton, Badge, CategoryCheckRow, Palette, ResultRowView, SectionLabel, StatBlock } from "components.slint";
+import { ListView, ScrollView } from "std-widgets.slint";
+import { ActionButton, CategoryCheckRow, CustomSwitch, Palette, ResultRowView, ScanPulse, SectionLabel, SegmentedControl, StatBlock } from "components.slint";
 
 export struct CategoryRow {
     id: string,
@@ -7,6 +7,7 @@ export struct CategoryRow {
     detail: string,
     checked: bool,
     size-text: string,
+    share: float,
 }
 
 export struct ResultRow {
@@ -31,10 +32,12 @@ export component MainWindow inherits Window {
     in-out property <[ResultRow]> results;
     in-out property <int> result-count: 0;
     in-out property <int> selected-count: 0;
+    in-out property <int> age-index: 0;
     in-out property <bool> has-scanned: false;
     in-out property <bool> busy: false;
     in-out property <bool> show-aggressive: false;
     in-out property <bool> confirm-open: false;
+    in-out property <float> pulse-phase: 0;
     in property <bool> is-admin;
     in-out property <string> total-text: "—";
     in-out property <string> files-text: "—";
@@ -54,12 +57,20 @@ export component MainWindow inherits Window {
     callback age-changed(string);
     callback aggressive-changed(bool);
 
+    pulse-timer := Timer {
+        interval: 30ms;
+        running: root.busy;
+        triggered() => {
+            root.pulse-phase = mod(root.pulse-phase + 0.025, 1.15);
+        }
+    }
+
     HorizontalLayout {
         padding: 16px;
         spacing: 16px;
 
         VerticalLayout {
-            width: 268px;
+            width: 272px;
             spacing: 12px;
 
             HorizontalLayout {
@@ -93,7 +104,7 @@ export component MainWindow inherits Window {
             ScrollView {
                 vertical-stretch: 1;
                 VerticalLayout {
-                    spacing: 4px;
+                    spacing: 2px;
                     SectionLabel { text: "SAFE CLEANERS"; }
                     for cat[i] in safe-categories: CategoryCheckRow {
                         label: cat.label;
@@ -101,13 +112,15 @@ export component MainWindow inherits Window {
                         checked: cat.checked;
                         active: !root.busy;
                         size-text: cat.size-text;
+                        share: cat.share;
                         toggled => { root.toggle-safe(i); }
                     }
-                    Rectangle { height: 8px; }
+                    Rectangle { height: 10px; }
                     HorizontalLayout {
                         spacing: 8px;
-                        Switch {
-                            checked: root.show-aggressive;
+                        CustomSwitch {
+                            on: root.show-aggressive;
+                            active: !root.busy;
                             toggled => {
                                 root.show-aggressive = !root.show-aggressive;
                                 root.aggressive-changed(root.show-aggressive);
@@ -122,13 +135,14 @@ export component MainWindow inherits Window {
                         }
                     }
                     if show-aggressive: VerticalLayout {
-                        spacing: 4px;
+                        spacing: 2px;
                         for cat[i] in aggressive-categories: CategoryCheckRow {
                             label: cat.label;
                             detail: cat.detail;
                             checked: cat.checked;
                             active: !root.busy;
                             size-text: cat.size-text;
+                            share: cat.share;
                             toggled => { root.toggle-aggressive(i); }
                         }
                     }
@@ -171,16 +185,13 @@ export component MainWindow inherits Window {
                 }
                 HorizontalLayout {
                     spacing: 8px;
-                    Text {
-                        text: "Older than";
-                        font-size: 12px;
-                        color: Palette.muted;
-                        vertical-alignment: center;
-                    }
-                    ComboBox {
-                        width: 180px;
-                        model: ["Any age", "Older than 24 hours", "Older than 7 days"];
-                        selected(value) => { root.age-changed(value); }
+                    SegmentedControl {
+                        options: ["Any age", "Last 24 hours", "Last 7 days"];
+                        current: root.age-index;
+                        picked(index, value) => {
+                            root.age-index = index;
+                            root.age-changed(value);
+                        }
                     }
                     ActionButton {
                         text: "Scan";
@@ -193,7 +204,7 @@ export component MainWindow inherits Window {
 
             Rectangle {
                 background: Palette.surface;
-                border-radius: 12px;
+                border-radius: 8px;
                 border-width: 1px;
                 border-color: Palette.border;
                 HorizontalLayout {
@@ -236,7 +247,7 @@ export component MainWindow inherits Window {
 
             if !has-scanned: Rectangle {
                 background: Palette.surface;
-                border-radius: 12px;
+                border-radius: 8px;
                 border-width: 1px;
                 border-color: Palette.border;
                 VerticalLayout {
@@ -261,7 +272,7 @@ export component MainWindow inherits Window {
 
             if has-scanned && result-count == 0: Rectangle {
                 background: Palette.surface;
-                border-radius: 12px;
+                border-radius: 8px;
                 border-width: 1px;
                 border-color: Palette.border;
                 VerticalLayout {
@@ -302,10 +313,10 @@ export component MainWindow inherits Window {
                 alignment: space-between;
                 HorizontalLayout {
                     spacing: 10px;
-                    ProgressIndicator {
+                    ScanPulse {
                         width: 140px;
-                        indeterminate: true;
-                        visible: root.busy;
+                        running: root.busy;
+                        phase: root.pulse-phase;
                     }
                     Text {
                         text: root.status-text;
@@ -337,9 +348,12 @@ export component MainWindow inherits Window {
             width: 440px;
             height: 216px;
             background: Palette.surface;
-            border-radius: 12px;
+            border-radius: 8px;
             border-width: 1px;
             border-color: Palette.border;
+            drop-shadow-blur: 24px;
+            drop-shadow-color: #00000066;
+            drop-shadow-offset-y: 8px;
             VerticalLayout {
                 padding: 20px;
                 spacing: 10px;

@@ -41,8 +41,8 @@ pub fn initial_categories() -> (Vec<CategoryData>, Vec<CategoryData>) {
 
 pub fn minimum_age_for_label(label: &str) -> MinimumAge {
     match label {
-        "Older than 24 hours" => MinimumAge::from_hours(24),
-        "Older than 7 days" => MinimumAge::from_hours(168),
+        "Last 24 hours" => MinimumAge::from_hours(24),
+        "Last 7 days" => MinimumAge::from_hours(168),
         _ => MinimumAge::none(),
     }
 }
@@ -151,7 +151,7 @@ mod tests {
     fn maps_age_labels() {
         assert!(minimum_age_for_label("Any age").as_duration().is_none());
         assert!(
-            minimum_age_for_label("Older than 24 hours")
+            minimum_age_for_label("Last 24 hours")
                 .as_duration()
                 .is_some()
         );
