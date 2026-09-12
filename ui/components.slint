@@ -245,11 +245,13 @@ export component CategoryCheckRow inherits Rectangle {
                     font-size: 13px;
                     font-weight: 600;
                     color: Palette.ink;
+                    overflow: elide;
                 }
                 Text {
                     text: root.detail;
                     font-size: 11px;
                     color: Palette.muted;
+                    overflow: elide;
                 }
             }
             Text {

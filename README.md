@@ -19,6 +19,17 @@
 
 Portable, no installer. Admin rights unlock system locations. Everything else works as a normal user.
 
+<p align="center">
+  <img src="assets/screenshots/results.png" width="860" alt="Junky scan results with per file selection">
+  <br>
+  <em>Scan results with per file selection and size badges.</em>
+</p>
+<p align="center">
+  <img src="assets/screenshots/dialog.png" width="640" alt="Junky delete confirmation dialog">
+  <br>
+  <em>The confirm step lists exactly what will go.</em>
+</p>
+
 ## Why Junky
 
 * **Scan first, always.** You see every file and its size before anything is deleted.
